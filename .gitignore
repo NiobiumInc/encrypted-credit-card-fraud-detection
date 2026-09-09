@@ -1,0 +1,79 @@
+# Compiled artefacts, by extension. The named directories below are the first
+# line of defence; these catch anything that lands outside them, which is how a
+# built dependency reaches a commit when a directory rule stops matching.
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.obj
+*.lib
+
+# Build outputs
+build-cpu/
+build/
+build-release/
+dbuild/
+
+# File-staged client/server io-dirs (cc/keys/inputs/results, incl. multi-GB rk.bin)
+io/
+io_*/
+
+# Record/replay caches (per-program directories)
+fraud-inference*/
+fixedmanual-smoke/
+fixedmanual-smoke_*/
+ctpt-smoke/
+ctpt-smoke_*/
+flexibleauto-min/
+flexibleauto-min_*/
+global_key_cache*/
+
+# Stage output. These land wherever --io-dir points, which can be the repository
+# root, and sk.bin is the secret key: it must never be committable.
+cc.bin
+pk.bin
+sk.bin
+mk.bin
+rk.bin
+cipher_input*.bin
+cipher_result*.bin
+truth_*.txt
+results.csv
+timing_summary_*.json
+
+# Per-run key/data binaries (gigabytes of CKKS keys and ciphertexts)
+fraud-inference*.bin
+ctpt-smoke.*.bin
+fixedmanual-smoke.*.bin
+*.openfhe.bin
+
+# Logs + crash dumps
+*.log
+*.profraw
+core.*
+
+# Python harness caches
+__pycache__/
+*.pyc
+
+# Self-contained fog build + harness run outputs
+build-fog/
+measurements/
+
+# OpenFHE build tree (the niobium-client submodule is the OpenFHE source;
+# this is only a leftover from older local builds)
+third_party/
+
+# Editor, OS and scratch files. .bak in particular: the release checklist calls
+# out developer journals and .bak files as things that must never be committed.
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.bak[0-9]

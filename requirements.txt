@@ -1,0 +1,5 @@
+# The fraud-detection harness (harness/*.py) uses only the Python 3 standard
+# library — no third-party packages are required. Python 3.8+.
+#
+# (This file exists for parity with the benchmarking-suite layout; there is
+# nothing to install. Create a venv if you like: python3 -m venv .venv)
