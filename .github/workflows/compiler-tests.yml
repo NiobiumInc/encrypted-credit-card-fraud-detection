@@ -59,7 +59,7 @@ jobs:
     # than FBS's, so the default gcp-ephemeral machine is the starting
     # assumption, not a measured number. Add a measured machine-type label
     # here if this run turns out to be memory-starved.
-    runs-on: [self-hosted, gcp-ephemeral]
+    runs-on: [self-hosted, gcp-ephemeral, "run-${{ github.run_id }}"]
     timeout-minutes: 60   # OpenFHE cold-build ~15 min + fraud record/replay round trip
     env:
       SDK: /mnt/niobium-sdk/sdk   # mounted RO at boot by runner-startup.sh
