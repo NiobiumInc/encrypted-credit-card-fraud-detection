@@ -38,7 +38,6 @@ int main(int argc, char** argv) try {
   const std::string& io = args.io_dir;
   const int row = args.row;
 
-  auto wall_start = std::chrono::high_resolution_clock::now();
 
   // ── Load context + secret key ──
   CryptoContextT cc;
@@ -85,11 +84,6 @@ int main(int argc, char** argv) try {
        << logits[1] << "," << (agree ? 1 : 0) << std::endl;
   }
 
-  nb::TimingSummary ts;
-  ts.role = "decrypt"; ts.workload = "Fraud"; ts.mode = "CPU";
-  ts.detail = "row" + std::to_string(row);
-  ts.wall_ms = nb::elapsed_ms(wall_start);
-  nb::write_timing_summary(ts);
 
   // Exit 0 on a successful decrypt regardless of agreement (the harness checks
   // results.csv against the plaintext reference); only I/O / decode failures

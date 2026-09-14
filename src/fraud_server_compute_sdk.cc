@@ -79,7 +79,6 @@ int main(int argc, char** argv) try {
   const std::string& io = args.io_dir;
   const int row = args.row;
 
-  auto wall_start = std::chrono::high_resolution_clock::now();
 
   // ── Load crypto context + eval keys (NO secret key) ──
   CryptoContextT cc;
@@ -166,7 +165,7 @@ int main(int argc, char** argv) try {
         prep.arg4,  prep.arg5,  prep.arg6,  prep.arg7,
         prep.arg8,  prep.arg9,  prep.arg10, prep.arg11,
         prep.arg12, prep.arg13, prep.arg14, prep.arg15);
-    compute_ms = nb::elapsed_ms(t_compute);
+    compute_ms = fraud::elapsedMs(t_compute);
     niobium::compiler().enable_hollow_mode(false);
     recorded[0]->SetScalingFactor(fraud::resultScalingFactor());
 
@@ -194,7 +193,7 @@ int main(int argc, char** argv) try {
   }
   res->SetScalingFactor(fraud::resultScalingFactor());
   out = {res};
-  compute_ms = nb::elapsed_ms(t_replay);
+  compute_ms = fraud::elapsedMs(t_replay);
   std::cout << "[server-sdk] replay done (compute=" << compute_ms << " ms)" << std::endl;
 #else
 #error "fraud_server_compute_sdk.cc must be built with NIOBIUM_COMPILER"
@@ -205,15 +204,6 @@ int main(int argc, char** argv) try {
     throw std::runtime_error("Failed to serialize " + fraud::resultFile(io, row));
   std::cout << "[server-sdk] wrote " << fraud::resultFile(io, row) << std::endl;
 
-  // ── Telemetry ──
-  nb::TimingSummary ts;
-  ts.role         = "server";
-  ts.workload     = "Fraud";
-  ts.mode         = "SDK";
-  ts.detail       = "row" + std::to_string(row);
-  ts.wall_ms      = nb::elapsed_ms(wall_start);
-  ts.t_compute_ms = compute_ms;
-  nb::write_timing_summary(ts);
 
   return 0;
 } catch (const std::exception& e) {

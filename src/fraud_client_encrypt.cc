@@ -38,7 +38,6 @@ int main(int argc, char** argv) try {
   const std::string& io = args.io_dir;
   const int row = args.row;
 
-  auto wall_start = std::chrono::high_resolution_clock::now();
 
   // ── Load context + public key (no eval keys needed to encrypt) ──
   CryptoContextT cc;
@@ -79,11 +78,6 @@ int main(int argc, char** argv) try {
 
   std::cout << "[encrypt] wrote " << fraud::inputFile(io, row) << std::endl;
 
-  nb::TimingSummary ts;
-  ts.role = "encrypt"; ts.workload = "Fraud"; ts.mode = "CPU";
-  ts.detail = "row" + std::to_string(row);
-  ts.wall_ms = nb::elapsed_ms(wall_start);
-  nb::write_timing_summary(ts);
   return 0;
 } catch (const std::exception& e) {
   std::cerr << "[encrypt] error: " << e.what() << std::endl;

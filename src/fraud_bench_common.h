@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -26,15 +27,20 @@
 #include <string>
 #include <vector>
 
-#include "nb_telemetry/timing_summary.h"
-
 namespace fraud {
+
+// Milliseconds since t0. The stages print their own step timings; the harness
+// does the run-level accounting.
+inline double elapsedMs(std::chrono::high_resolution_clock::time_point t0) {
+  auto now = std::chrono::high_resolution_clock::now();
+  return std::chrono::duration<double, std::milli>(now - t0).count();
+}
 
 // ── CKKS params (informational) ──────────────────────────────────────────────
 // The real parameters are baked into the HEIR kernel
 // (run_inference__generate_crypto_context): MultDepth 15, FIXEDMANUAL,
-// ring 65536, HEStd_128_classic. These constants are for logging / telemetry
-// `detail` strings only — the kernel is the source of truth.
+// ring 65536, HEStd_128_classic. These constants are for logging only —
+// the kernel is the source of truth.
 constexpr uint32_t RING_DIM   = 65536;
 constexpr uint32_t MULT_DEPTH = 15;
 

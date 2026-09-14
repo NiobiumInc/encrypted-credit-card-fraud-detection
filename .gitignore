@@ -42,7 +42,6 @@ cipher_input*.bin
 cipher_result*.bin
 truth_*.txt
 results.csv
-timing_summary_*.json
 
 # Per-run key/data binaries (gigabytes of CKKS keys and ciphertexts)
 fraud-inference*.bin

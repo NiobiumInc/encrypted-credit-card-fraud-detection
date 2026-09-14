@@ -27,7 +27,7 @@ if(NIOBIUM_SDK_BUILD)
   include_directories(
     ${OpenFHE_INCLUDE} ${OpenFHE_INCLUDE}/core ${OpenFHE_INCLUDE}/pke ${OpenFHE_INCLUDE}/binfhe
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/include                 # vendored nb_telemetry/ + plaintext_macro.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include                 # vendored plaintext_macro.h
     ${NB_FHETCH_DIR}/include                            # niobium/compiler.h (SDK)
     ${NB_FHETCH_DIR}/vendor/json/single_include)        # nlohmann/json (if vendored there)
   link_directories(${OpenFHE_LIBDIR})
