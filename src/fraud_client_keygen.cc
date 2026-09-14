@@ -36,7 +36,6 @@ int main(int argc, char** argv) try {
   const std::string& io = args.io_dir;
   std::filesystem::create_directories(io);
 
-  auto wall_start = std::chrono::high_resolution_clock::now();
 
   std::cout << "[keygen] generating crypto context..." << std::endl;
   CryptoContextT cc = run_inference__generate_crypto_context();
@@ -73,10 +72,6 @@ int main(int argc, char** argv) try {
 
   std::cout << "[keygen] wrote cc/pk/sk/mk/rk -> " << io << std::endl;
 
-  nb::TimingSummary ts;
-  ts.role = "keygen"; ts.workload = "Fraud"; ts.mode = "CPU"; ts.detail = "";
-  ts.wall_ms = nb::elapsed_ms(wall_start);
-  nb::write_timing_summary(ts);
   return 0;
 } catch (const std::exception& e) {
   std::cerr << "[keygen] error: " << e.what() << std::endl;

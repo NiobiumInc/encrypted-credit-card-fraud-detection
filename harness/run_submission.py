@@ -317,7 +317,6 @@ def main():
         libs.append(str(shim / "build"))
     for var in ("LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
         os.environ[var] = ":".join(libs + [os.environ.get(var, "")])
-    os.environ["NB_TIMING_SUMMARY_DIR"] = str(io)
 
     # 3. Fresh io-dir + recorded traces + keygen once. The trace is keyed on the
     #    target and opt level, not on the keys, so a trace left over from a
