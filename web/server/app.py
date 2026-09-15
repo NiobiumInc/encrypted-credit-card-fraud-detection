@@ -124,6 +124,7 @@ async def info():
         "session_ttl_s": SESSION_TTL_S,
         "ring_dim": 65536,
         "mult_depth": 15,
+        "dev_mode": DEV_MODE,
     }
 
 

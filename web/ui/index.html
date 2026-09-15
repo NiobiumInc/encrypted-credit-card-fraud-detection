@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- Copyright (c) 2026 Niobium Microsystems, Inc.
+     SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Encrypted Fraud Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">◆</span>
+      <h1>Encrypted Fraud Detection</h1>
+      <span class="sub">CKKS · ring 2<sup>16</sup> · depth 15 · the server never sees the transaction</span>
+    </div>
+    <div class="controls">
+      <span id="dev-badge" class="badge warn" hidden>DEV MODE — native stages, not browser crypto</span>
+      <label class="target-label">backend
+        <select id="target"></select>
+      </label>
+      <span id="session-chip" class="badge">no session</span>
+    </div>
+  </header>
+
+  <section id="setup" class="setup">
+    <div class="setup-card">
+      <h2>1 · Client keys</h2>
+      <p>The browser generates the CKKS key pair and evaluation keys, keeps the
+         secret key, and uploads only the evaluation material
+         (<span class="mono">cc + mk + rk ≈ 1.9&nbsp;GB, once per session</span>).
+         The server can compute on your ciphertext but can never read it.</p>
+      <button id="btn-setup">Start session</button>
+      <div id="setup-progress" class="progress" hidden>
+        <div class="progress-label" id="setup-label">…</div>
+        <div class="bar"><div id="setup-bar"></div></div>
+      </div>
+      <div id="setup-error" class="error" hidden></div>
+    </div>
+  </section>
+
+  <main hidden id="main">
+    <div class="table-head">
+      <h2>2 · Pick transactions to score <span class="hint">(up to <span id="max-sel">5</span> at a time — this sample stream runs ~10% fraud; real traffic is ~0.5%)</span></h2>
+      <label class="reveal"><input type="checkbox" id="reveal"> reveal ground truth</label>
+    </div>
+    <div class="table-wrap">
+      <table id="txns">
+        <thead>
+          <tr>
+            <th></th><th class="r">Amount</th><th>Merchant</th><th>Category</th>
+            <th>Cardholder</th><th>Location</th><th>When</th><th>Truth</th><th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer hidden id="actionbar">
+    <div id="sel-count">0 selected</div>
+    <button id="btn-score" disabled>Encrypt &amp; score</button>
+    <div id="run-status" class="mono"></div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
