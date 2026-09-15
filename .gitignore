@@ -76,3 +76,9 @@ third_party/
 *~
 *.bak
 *.bak[0-9]
+
+# web demo runtime artifacts
+web/server/sessions/
+web/server/devclient/
+web/ui/transactions.json
+web/wasm/build/
