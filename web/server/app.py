@@ -136,7 +136,24 @@ async def create_session():
     return {"session_id": sid}
 
 
-async def _stream_to(request: Request, path: Path, limit: int) -> int:
+async def _stream_to(request: Request, path: Path, limit: int, append: bool = False) -> int:
+    if append:
+        # Direct append (no tmp+rename): each archive lands whole in one
+        # request, and a failed transfer truncates back to the pre-request size.
+        base = path.stat().st_size if path.exists() else 0
+        n = base
+        try:
+            with open(path, "ab") as f:
+                async for chunk in request.stream():
+                    n += len(chunk)
+                    if n > limit:
+                        raise HTTPException(413, f"file exceeds {limit} bytes")
+                    f.write(chunk)
+        except BaseException:
+            with open(path, "ab") as f:
+                f.truncate(base)
+            raise
+        return n
     n = 0
     tmp = path.with_suffix(".part")
     with open(tmp, "wb") as f:
@@ -152,7 +169,10 @@ async def _stream_to(request: Request, path: Path, limit: int) -> int:
 
 
 @app.put("/api/sessions/{sid}/keys/{name}")
-async def upload_key(sid: str, name: str, request: Request):
+async def upload_key(sid: str, name: str, request: Request, append: bool = False):
+    """Store one key file. `append=1` adds another archive to an existing file —
+    the web client streams rotation keys one archive at a time (the compute
+    stage accepts concatenated archives), keeping browser memory flat."""
     s = _session(sid)
     if name in ("sk", "pk"):
         # The secret key must never reach this host; the public key has no
@@ -161,7 +181,7 @@ async def upload_key(sid: str, name: str, request: Request):
     if name not in KEY_NAMES:
         raise HTTPException(400, f"unknown key '{name}' (want one of {KEY_NAMES})")
     async with s.lock:
-        n = await _stream_to(request, s.key_path(name), MAX_KEY_BYTES[name])
+        n = await _stream_to(request, s.key_path(name), MAX_KEY_BYTES[name], append=append)
     return {"received": n, "ready": s.ready()}
 
 

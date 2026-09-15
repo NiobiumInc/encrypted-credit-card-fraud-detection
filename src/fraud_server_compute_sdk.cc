@@ -91,8 +91,20 @@ int main(int argc, char** argv) try {
   }
   {
     std::ifstream rk(fraud::rkFile(io), std::ios::in | std::ios::binary);
-    if (!rk.is_open() || !cc->DeserializeEvalAutomorphismKey(rk, SerType::BINARY))
-      throw std::runtime_error("Failed to load rotation keys from " + fraud::rkFile(io));
+    if (!rk.is_open())
+      throw std::runtime_error("Failed to open rotation keys " + fraud::rkFile(io));
+    // rk.bin holds one or more concatenated archives: the native keygen writes
+    // a single archive with every rotation key, while the web client streams
+    // one key per archive to keep its in-browser memory flat. Deserialization
+    // merges per index, so looping to EOF accepts both layouts.
+    size_t archives = 0;
+    while (rk.peek() != EOF) {
+      if (!cc->DeserializeEvalAutomorphismKey(rk, SerType::BINARY))
+        throw std::runtime_error("Failed to load rotation keys from " + fraud::rkFile(io));
+      ++archives;
+    }
+    if (archives == 0)
+      throw std::runtime_error("No rotation-key archives in " + fraud::rkFile(io));
   }
 
   std::cout << "[server-sdk] ring=" << cc->GetRingDimension()

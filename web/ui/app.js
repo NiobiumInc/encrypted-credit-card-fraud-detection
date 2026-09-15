@@ -49,19 +49,75 @@ class DevClient {
 }
 
 class WasmClient {
-  // Loads the OpenFHE WASM module (web/wasm build output). Keygen streams each
-  // evaluation key to the server as it is generated so peak memory stays low.
-  constructor() { this.kind = "wasm"; }
-  async setup(onProgress) {
-    if (!window.FraudFHE) {
-      throw new Error(
-        "WASM module not present (web/ui/fhe/fraud_fhe.js). Build web/wasm, " +
-        "or run the server with FRAUD_WEB_DEV=1 to use the dev scaffold.");
-    }
-    throw new Error("WasmClient wiring lands with the web/wasm build");
+  // OpenFHE compiled to WebAssembly, hosted in a Web Worker. Keygen runs in the
+  // browser; the secret key never leaves the worker. Each rotation key is
+  // generated, uploaded (append), and dropped one at a time so browser memory
+  // stays flat while ~1.8 GB of evaluation keys stream to the server.
+  constructor() {
+    this.kind = "wasm";
+    this.worker = null;
+    this.pending = new Map();
+    this.msgId = 0;
   }
-  async encrypt() { throw new Error("not built"); }
-  async decrypt() { throw new Error("not built"); }
+
+  _call(op, args, transfer) {
+    if (!this.worker) {
+      this.worker = new Worker("fhe-worker.js");
+      this.worker.onmessage = (e) => {
+        const { id, ok, result, error } = e.data;
+        const p = this.pending.get(id);
+        if (!p) return;
+        this.pending.delete(id);
+        ok ? p.resolve(result) : p.reject(new Error(error));
+      };
+    }
+    const id = ++this.msgId;
+    return new Promise((resolve, reject) => {
+      this.pending.set(id, { resolve, reject });
+      this.worker.postMessage({ id, op, args }, transfer || []);
+    });
+  }
+
+  async setup(onProgress) {
+    onProgress("loading FHE module (WebAssembly)…", 0.01);
+    await this._call("init");
+
+    onProgress("generating keys in your browser (CKKS, ring 2¹⁶)…", 0.03);
+    const { rotKeys } = await this._call("keygen");
+
+    const r = await fetch("/api/sessions", { method: "POST" });
+    if (!r.ok) throw new Error(await r.text());
+    const sid = (await r.json()).session_id;
+
+    const put = async (name, body, append) => {
+      const resp = await fetch(
+        `/api/sessions/${sid}/keys/${name}${append ? "?append=1" : ""}`,
+        { method: "PUT", body });
+      if (!resp.ok) throw new Error(await resp.text());
+    };
+
+    onProgress("uploading crypto context…", 0.06);
+    await put("cc", await this._call("serialize", { what: "cc" }));
+    onProgress("uploading relinearization key…", 0.08);
+    await put("mk", await this._call("serialize", { what: "mk" }));
+
+    for (let i = 0; i < rotKeys; i++) {
+      onProgress(`rotation key ${i + 1}/${rotKeys} — generate in browser, upload, drop…`,
+                 0.1 + 0.9 * (i / rotKeys));
+      const part = await this._call("rotKeyPart", { i });
+      await put("rk", part, i > 0);
+    }
+    onProgress("session ready — the secret key stays in this page", 1);
+    return sid;
+  }
+
+  async encrypt(txn) {
+    return await this._call("encrypt", { features: txn.features });
+  }
+
+  async decrypt(buf, _txn) {
+    return await this._call("decrypt", { ct: buf }, [buf]);
+  }
 }
 
 // ── scoring pipeline ──────────────────────────────────────────────────────────
@@ -218,9 +274,13 @@ async function boot() {
     sel.appendChild(o);
   }
 
-  state.client = window.FraudFHE ? new WasmClient()
+  // Prefer real browser crypto whenever the WASM module has been built; the
+  // dev scaffold is the fallback for UI work before/without it.
+  const wasmAvailable =
+    (await fetch("fhe/fraud_fhe.js", { method: "HEAD" })).ok;
+  state.client = wasmAvailable ? new WasmClient()
     : info.dev_mode ? new DevClient()
-    : new WasmClient();
+    : new WasmClient();  // will fail with a pointer to web/wasm/build.sh
   $("dev-badge").hidden = state.client.kind !== "dev";
   $("max-sel").textContent = MAX_SELECT;
 
