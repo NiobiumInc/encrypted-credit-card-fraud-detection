@@ -130,3 +130,5 @@ footer {
 #run-status { color: var(--dim); font-size: 12.5px; }
 
 @keyframes pulse { 50% { opacity: 0.55; } }
+
+tbody tr.oob { opacity: 0.38; cursor: not-allowed; }

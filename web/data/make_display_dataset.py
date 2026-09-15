@@ -49,6 +49,21 @@ def main() -> None:
     ap.add_argument("--out", default=str(REPO / "web" / "ui" / "transactions.json"))
     args = ap.parse_args()
 
+    # Per-feature standardized clamp range. The degree-5 activation is fitted
+    # over the training range; a row outside it can diverge past the scale the
+    # result is encoded for and fail to decrypt. The client filters pre-flight
+    # (UI: such rows are shown but not selectable).
+    bounds = None
+    bpath = REPO / "data" / "feature_bounds.csv"
+    if bpath.exists():
+        lo, hi = [], []
+        for i, line in enumerate(bpath.read_text().splitlines()):
+            cols_ = line.split(",")
+            if i == 0 or len(cols_) < 4:
+                continue
+            lo.append(float(cols_[2])); hi.append(float(cols_[3]))
+        bounds = (lo, hi)
+
     meta = json.loads((HERE / "encoding_meta.json").read_text())
     cols = meta["columns"]
     mean = dict(zip(cols, meta["mean"]))
@@ -95,8 +110,13 @@ def main() -> None:
         if merchant.startswith("fraud_"):  # Sparkov prefixes every merchant
             merchant = merchant[len("fraud_"):]
 
+        oob = bool(bounds) and any(
+            v < bounds[0][j] or v > bounds[1][j]
+            for j, v in enumerate(feats[: len(bounds[0])]))
+
         out_rows.append({
             "id": i,
+            "oob": oob,
             "amount": round(unz("amt", raw), 2),
             "merchant": merchant,
             "category": pretty_category(category),

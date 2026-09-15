@@ -11,7 +11,9 @@ importScripts("fhe/fraud_fhe.js");
 let mod = null;
 
 async function ensureModule() {
-  if (!mod) mod = await FraudFHEModule();
+  // locateFile: the loader resolves the .wasm relative to this worker's URL
+  // by default, which points at the site root — pin it to fhe/.
+  if (!mod) mod = await FraudFHEModule({ locateFile: (f) => `fhe/${f}` });
   return mod;
 }
 

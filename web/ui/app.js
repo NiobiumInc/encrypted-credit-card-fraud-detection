@@ -196,6 +196,7 @@ function setVerdict(tr, kind, out) {
 }
 
 function toggleRow(id) {
+  if (state.txns[id].oob) return;  // outside the model's fitted range
   const tr = document.querySelector(`tr[data-id="${id}"]`);
   const box = tr.querySelector("input");
   if (state.selected.has(id)) {
@@ -221,8 +222,13 @@ function renderTable() {
   for (const t of state.txns) {
     const tr = document.createElement("tr");
     tr.dataset.id = t.id;
+    if (t.oob) {
+      tr.classList.add("oob");
+      tr.title = "Outside the model's fitted feature range — the client filters " +
+                 "this pre-flight (the activation polynomial diverges on it)";
+    }
     tr.innerHTML = `
-      <td><input type="checkbox"></td>
+      <td><input type="checkbox" ${t.oob ? "disabled" : ""}></td>
       <td class="amount r">${fmtMoney(t.amount)}</td>
       <td>${t.merchant}</td>
       <td class="dim">${t.category}</td>
