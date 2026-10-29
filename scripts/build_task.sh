@@ -10,11 +10,9 @@ cd "$ROOT"
 
 echo "=== [1/3] sync niobium-client (its OpenFHE + niobium-fhetch + cpp-httplib) ==="
 git submodule update --init niobium-client
-# sync-fhetch, not a blanket --recursive: the transport build uses niobium-fhetch
-# and cpp-httplib only. Recursing everything also pulls niobium-haze and its own
-# nested vendor tree, including a second OpenFHE clone that nothing here builds.
-make -C niobium-client sync-fhetch
-git -C niobium-client submodule update --init vendor/cpp-httplib
+# niobium-client's only submodule is niobium-fhetch (OpenFHE nested in it);
+# cpp-httplib is vendored in its tree.
+make -C niobium-client sync
 
 echo "=== [2/3] build the client's bundled OpenFHE + libnbfhetch + transport (make release) ==="
 make -C niobium-client release        # installs OpenFHE to niobium-client/vendor/lib/openfhe
